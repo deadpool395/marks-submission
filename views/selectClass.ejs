@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Important for mobile -->
+  <title>Select Class</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, #2193b0, #6dd5ed);
+      color: #fff;
+    }
+    header {
+      text-align: center;
+      padding: 30px 15px;
+      background: rgba(0,0,0,0.2);
+    }
+    .logo {
+      margin-bottom: 12px;
+    }
+    .logo img {
+      max-height: 70px;
+      width: auto;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    header h2 {
+      margin: 5px 0 0;
+      font-size: 16px;
+      font-weight: 500;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      padding: 15px;
+    }
+    .card {
+      background: #fff;
+      color: #333;
+      padding: 25px 20px;
+      border-radius: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      text-align: center;
+      animation: fadeIn 0.8s ease-in-out;
+      width: 100%;
+      max-width: 400px; /* prevent too wide on desktop */
+    }
+    .card h2 {
+      margin-bottom: 15px;
+      color: #2193b0;
+      font-size: 20px;
+    }
+    select {
+      width: 100%;
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: 1px solid #2193b0;
+      font-size: 16px;
+      outline: none;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    select:hover {
+      border-color: #176c84;
+    }
+    .instructions {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 15px;
+      border-radius: 10px;
+      text-align: left;
+      font-size: 14px;
+      line-height: 1.6;
+      width: 100%;
+      max-width: 700px;
+      animation: fadeIn 1s ease-in-out;
+    }
+    .instructions strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+      color: #ffe082;
+    }
+    footer {
+      text-align: center;
+      padding: 12px;
+      background: rgba(0,0,0,0.2);
+      font-size: 12px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 📱 Mobile tweaks */
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 20px;
+      }
+      header h2 {
+        font-size: 14px;
+      }
+      .instructions {
+        font-size: 13px;
+        padding: 12px;
+      }
+      .card {
+        padding: 20px 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <!-- Logo -->
+    <div class="logo">
+      <img src="/images/logo.png" alt="School Logo">
+    </div>
+
+    <h1>SFS 🎓 Marks Submission System</h1>
+    <h2>Academic Year 2025-2026</h2>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Select Class</h2>
+      <form action="" method="GET">
+        <select id="classSelect" onchange="goToClass(this.value)">
+          <option value="">--Choose a Class--</option>
+          <% classList.forEach(cls => { %>
+            <option value="<%= cls %>"><%= cls %></option>
+          <% }) %>
+        </select>
+      </form>
+    </div>
+
+    <div class="instructions">
+      <strong>Instructions for Teachers:</strong>
+      <ul>
+        <li>Select the correct class before proceeding.</li>
+        <li>Ensure subject and exam type are chosen carefully.</li>
+        <li>Enter marks only for students you have evaluated.</li>
+        <li>Leave blank if a student was absent or not assessed.</li>
+        <li>Use the search feature in your browser to quickly identify the Hallticket Number.</li>
+        <li>If you are using a PC/system to upload marks do not scroll in the marks field, the value might change.</li>
+        <li>Multiple submission is not permitted.</li>
+        <li>If any marks entered were wrong, contact office and ask to delete data and re-enter.</li>
+        <li>If any error encountered in the system contact your System Administrator.</li>
+        <li>Double-check the data before submitting.</li>
+      </ul>
+    </div>
+  </main>
+
+  <footer>
+    © <%= new Date().getFullYear() %> SFS Marks Submission System | 🖥️ Powered By Daniel 🖥️ | 🎨 Designed By Fr Joby Varghese T.O.R 🎨
+  </footer>
+
+  <script>
+    function goToClass(cls) {
+      if (cls) window.location.href = "/class/" + cls;
+    }
+  </script>
+</body>
+</html>
