@@ -71,7 +71,7 @@ app.post("/submit", async (req, res) => {
       ];
     } else {
       if (!markValue) return null; // skip empty
-      const result = (parseInt(markValue) >= parseInt(minPassMark)) ? "Pass" : "Fail";
+      const result = (parseFloat(markValue) >= parseFloat(minPassMark)) ? "Pass" : "Fail";
       return [
         teacherName || "",
         className || "",
