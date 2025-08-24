@@ -54,7 +54,7 @@ app.post("/submit", async (req, res) => {
     const markValue = req.body[`marks_${student.hallticket}`];
     const gradeValue = req.body[`grade_${student.hallticket}`];
 
-    if (subjectName === "Drawing") {
+    if (subjectName === "Drawing" | subjectName ===  "Supw") {
       if (!gradeValue) return null; // skip empty
       return [
         teacherName || "",
@@ -144,7 +144,7 @@ app.post("/submit", async (req, res) => {
     });
 
     // ✅ Color "Fail" rows only when it's not Drawing
-    if (subjectName !== "Drawing") {
+    if (subjectName !== "Drawing" | subjectName !== "Supw") {
       const freshMeta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
       const targetSheet = freshMeta.data.sheets.find(s => s.properties.title === sheetName);
       const sheetId = targetSheet.properties.sheetId;
