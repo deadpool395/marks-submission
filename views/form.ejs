@@ -33,7 +33,7 @@
             <option value="">--Select Subject--</option>
             <option>Mathematics</option>
             <option>General-Science</option>
-            <option>English</option>
+            
             <option>History-and-civics</option>
             <option>Geography</option>
             <option>Biology</option>
@@ -48,9 +48,10 @@
             <option>Malayalam</option>
             <option>General-Knowledge</option>
             <option value="Drawing">Drawing</option>
+            <option value="Supw">SUPW</option>
             <option>Dict-Eng</option>
             <option>Dict-Mal</option>
-            <option>Dict-Hindi</option>
+            
           </select>
         </div>
 
@@ -89,7 +90,7 @@
                 name="marks_<%= student.hallticket %>" 
                 min="0" 
                 step="0.01"   
-                placeholder="Enter marks (e.g., 45.5)"
+                placeholder="Enter marks (e.g.,45 or 45.5)"
               >
             </div>
           <% }) %>
@@ -110,7 +111,7 @@
       const minField = document.querySelector('[name="minPassMark"]');
       const studentFields = document.querySelectorAll('.student-field');
   
-      if (subject === "Drawing") {
+      if (subject === "Drawing" | subject === "Supw") {
         // disable max/min marks
         maxField.disabled = true;
         minField.disabled = true;
@@ -146,7 +147,7 @@
           const hallticket = div.querySelector("label")?.textContent.replace(":","").trim() || div.getAttribute("data-hallticket");
           div.innerHTML = `
             <label class="form-label">${hallticket}:</label>
-            <input type="number" class="form-control student-input" name="marks_${hallticket}" min="0" step="0.01" placeholder="Enter marks (e.g., 45.5)">
+            <input type="number" class="form-control student-input" name="marks_${hallticket}" min="0" step="0.01" placeholder="Enter marks (e.g.,45 or 45.5)">
           `;
         });
       }
@@ -155,7 +156,7 @@
     function validateForm() {
       const subject = document.querySelector('[name="subjectName"]').value;
   
-      if (subject !== "Drawing") {
+      if (subject !== "Drawing" | subject !== "Supw") {
         // Ensure all marks entered are within max mark limit
         const maxMarks = parseFloat(document.querySelector('[name="maxMarks"]').value || "0");
         const inputs = document.querySelectorAll('input[name^="marks_"]');
