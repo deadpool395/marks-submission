@@ -144,41 +144,52 @@ app.post("/submit", async (req, res) => {
     });
 
     // ✅ Color "Fail" rows only when it's not Drawing
-    if (subjectName !== "Drawing" | subjectName !== "Supw") {
-      const freshMeta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
-      const targetSheet = freshMeta.data.sheets.find(s => s.properties.title === sheetName);
-      const sheetId = targetSheet.properties.sheetId;
+    // ✅ Color the whole "Result" column (J) each time
+if (subjectName !== "Drawing" && subjectName !== "Supw") {
+  const freshMeta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
+  const targetSheet = freshMeta.data.sheets.find(s => s.properties.title === sheetName);
+  const sheetId = targetSheet.properties.sheetId;
 
-      const failRequests = [];
-      records.forEach((row, i) => {
-        if (row[9] === "Fail") { // column J = index 9
-          failRequests.push({
-            repeatCell: {
-              range: {
-                sheetId,
-                startRowIndex: i + 1,  // skip header
-                endRowIndex: i + 2,
-                startColumnIndex: 9,
-                endColumnIndex: 10
-              },
-              cell: {
-                userEnteredFormat: {
-                  backgroundColor: { red: 1, green: 0.8, blue: 0.8 }
-                }
-              },
-              fields: "userEnteredFormat.backgroundColor"
-            }
-          });
-        }
-      });
+  // 1️⃣ Get all values in column J (Result column)
+  const resultData = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: `${sheetName}!J2:J`, // skip header row
+  });
 
-      if (failRequests.length > 0) {
-        await sheets.spreadsheets.batchUpdate({
-          spreadsheetId: SHEET_ID,
-          requestBody: { requests: failRequests }
-        });
-      }
+  const results = resultData.data.values || [];
+
+  // 2️⃣ Build coloring requests for each row
+  const requests = results.map((row, i) => {
+    const value = row[0] ? row[0].toString().trim() : "";
+    let color = { red: 1, green: 1, blue: 1 }; // default = white
+
+    if (value.toLowerCase() === "fail") {
+      color = { red: 1, green: 0.8, blue: 0.8 }; // light red
     }
+
+    return {
+      repeatCell: {
+        range: {
+          sheetId,
+          startRowIndex: i + 1,  // +1 to skip header
+          endRowIndex: i + 2,
+          startColumnIndex: 9,   // Column J index = 9
+          endColumnIndex: 10
+        },
+        cell: { userEnteredFormat: { backgroundColor: color } },
+        fields: "userEnteredFormat.backgroundColor"
+      }
+    };
+  });
+
+  // 3️⃣ Send batchUpdate to Google Sheets
+  if (requests.length > 0) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SHEET_ID,
+      requestBody: { requests }
+    });
+  }
+}
 
     res.render("success", { message: `Data for ${sheetName} submitted successfully!` });
 
