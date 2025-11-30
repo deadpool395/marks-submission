@@ -59,6 +59,7 @@ app.post("/submit", async (req, res) => {
       return [
         teacherName || "",
         className || "",
+        student.division || "",
         subjectName || "",
         examType || "",
         "", // Min Pass not applicable
@@ -75,6 +76,7 @@ app.post("/submit", async (req, res) => {
       return [
         teacherName || "",
         className || "",
+        student.division || "",
         subjectName || "",
         examType || "",
         minPassMark || "",
@@ -115,12 +117,13 @@ app.post("/submit", async (req, res) => {
       // ✅ Add headers
       await sheets.spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
-        range: `${sheetName}!A1:K1`,
+        range: `${sheetName}!A1:L1`,
         valueInputOption: "USER_ENTERED",
         requestBody: {
           values: [[
             "Teacher",
             "Class",
+            "Division",
             "Subject",
             "Exam Type",
             "Min Pass",
@@ -138,7 +141,7 @@ app.post("/submit", async (req, res) => {
     // ✅ Append data
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
-      range: `${sheetName}!A:K`,
+      range: `${sheetName}!A:L`,
       valueInputOption: "USER_ENTERED",
       requestBody: { values: records },
     });
@@ -153,7 +156,7 @@ if (subjectName !== "Drawing" && subjectName !== "Supw") {
   // 1️⃣ Get all values in column J (Result column)
   const resultData = await sheets.spreadsheets.values.get({
     spreadsheetId: SHEET_ID,
-    range: `${sheetName}!J2:J`, // skip header row
+    range: `${sheetName}!K2:K`, // skip header row
   });
 
   const results = resultData.data.values || [];
@@ -173,8 +176,8 @@ if (subjectName !== "Drawing" && subjectName !== "Supw") {
           sheetId,
           startRowIndex: i + 1,  // +1 to skip header
           endRowIndex: i + 2,
-          startColumnIndex: 9,   // Column J index = 9
-          endColumnIndex: 10
+          startColumnIndex: 10,   // Column K index = 10
+          endColumnIndex: 11
         },
         cell: { userEnteredFormat: { backgroundColor: color } },
         fields: "userEnteredFormat.backgroundColor"
@@ -190,6 +193,7 @@ if (subjectName !== "Drawing" && subjectName !== "Supw") {
     });
   }
 }
+
 
     res.render("success", { message: `Data for ${sheetName} submitted successfully!` });
 
