@@ -17,7 +17,7 @@
   <div class="container mt-5">
     <div class="card shadow-lg p-4">
       <h2 class="text-center mb-4 text-primary">Enter Marks for Class <%= className %></h2>
-      <form action="/submit" method="POST" onsubmit="return validateForm()">
+      <form action="/submit" method="POST" onsubmit="disableSubmitButton(); return validateForm()">
         <input type="hidden" name="className" value="<%= className %>">
 
         <!-- Teacher Name -->
@@ -98,7 +98,7 @@
         
 
         <div class="text-center mt-4">
-          <button type="submit" class="btn btn-success btn-lg">Submit</button>
+          <button id="submitBtn" type="submit" class="btn btn-success btn-lg">Submit</button>
         </div>
       </form>
     </div>
@@ -178,6 +178,13 @@
   
       return true;
     }
+
+    function disableSubmitButton() {
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.innerText = "Submitting… Please wait";
+  btn.style.opacity = "0.6";
+}
     
 
   </script>
