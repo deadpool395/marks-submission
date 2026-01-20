@@ -13,181 +13,190 @@
     }
   </style>
 </head>
+
 <body class="bg-light">
-  <div class="container mt-5">
-    <div class="card shadow-lg p-4">
-      <h2 class="text-center mb-4 text-primary">Enter Marks for Class <%= className %></h2>
-      <form action="/submit" method="POST" onsubmit="disableSubmitButton(); return validateForm()">
-        <input type="hidden" name="className" value="<%= className %>">
+<div class="container mt-5">
+  <div class="card shadow-lg p-4">
+    <h2 class="text-center mb-4 text-primary">Enter Marks for Class <%= className %></h2>
 
-        <!-- Teacher Name -->
-        <div class="mb-3">
-          <label class="form-label">Teacher Name:</label>
-          <input type="text" name="teacherName" class="form-control" required>
+    <form action="/submit" method="POST" onsubmit="disableSubmitButton(); return validateForm()">
+      <input type="hidden" name="className" value="<%= className %>">
+
+      <!-- Teacher Name -->
+      <div class="mb-3">
+        <label class="form-label">Teacher Name:</label>
+        <input type="text" name="teacherName" class="form-control" required>
+      </div>
+
+      <!-- Subject -->
+      <div class="mb-3">
+        <label class="form-label">Subject Name:</label>
+        <select name="subjectName" class="form-select" required onchange="toggleFields(this.value)">
+          <option value="">--Select Subject--</option>
+          <option>Mathematics</option>
+          <option>General-Science</option>
+          <option>History-and-civics</option>
+          <option>Geography</option>
+          <option>Biology</option>
+          <option>Chemistry</option>
+          <option>Physics</option>
+          <option>Computer</option>
+          <option>Commerce</option>
+          <option>Social-Studies</option>
+          <option>Moral-Science</option>
+          <option>English-I</option>
+          <option>English-II</option>
+          <option>Hindi</option>
+          <option>Malayalam</option>
+          <option>General-Knowledge</option>
+          <option value="Drawing">Drawing</option>
+          <option value="Supw">SUPW</option>
+          <option>Dict-Eng</option>
+          <option>Dict-Mal</option>
+        </select>
+      </div>
+
+      <!-- Exam Type -->
+      <div class="mb-3">
+        <label class="form-label">Exam Type:</label>
+        <select name="examType" class="form-select" required>
+          <option value="">--Select Exam Type--</option>
+          <option value="Term One">Term One</option>
+          <option value="Term Two">Term Two</option>
+          <option value="Term Three">Term Three</option>
+        </select>
+      </div>
+
+      <!-- Marks limits -->
+      <div id="marksFields" class="row mb-3">
+        <div class="col">
+          <label class="form-label">Maximum Marks:</label>
+          <input type="number" name="maxMarks" class="form-control" min="1" required>
         </div>
-
-        <!-- Subject Name -->
-        <div class="mb-3">
-          <label class="form-label">Subject Name:</label>
-          <select name="subjectName" class="form-select" required onchange="toggleFields(this.value)">
-            <option value="">--Select Subject--</option>
-            <option>Mathematics</option>
-            <option>General-Science</option>
-            
-            <option>History-and-civics</option>
-            <option>Geography</option>
-            <option>Biology</option>
-            <option>Chemistry</option>
-            <option>Physics</option>
-            <option>Computer</option>
-            <option>Commerce</option>
-            <option>Social-Studies</option>
-            <option>Moral-Science</option>
-            <option>English-I</option>
-            <option>English-II</option>
-            <option>Hindi</option>
-            <option>Malayalam</option>
-            <option>General-Knowledge</option>
-            <option value="Drawing">Drawing</option>
-            <option value="Supw">SUPW</option>
-            <option>Dict-Eng</option>
-            <option>Dict-Mal</option>
-            
-          </select>
+        <div class="col">
+          <label class="form-label">Minimum Pass Marks:</label>
+          <input type="number" name="minPassMark" class="form-control" min="0" required>
         </div>
+      </div>
 
-        <!-- Exam Type -->
-        <div class="mb-3">
-          <label class="form-label">Exam Type:</label>
-          <select name="examType" class="form-select" required>
-            <option value="">--Select Exam Type--</option>
-            <option value="Term One">Term One</option>
-            <option value="Term Two">Term Two</option>
-            <option value="Term Three">Term Three</option>
-          </select>
-        </div>
+      <h4 class="text-secondary">Marks for Students</h4>
 
-        <!-- Max and Min Marks -->
-        <div id="marksFields" class="row mb-3">
-          <div class="col">
-            <label class="form-label">Maximum Marks:</label>
-            <input type="number" name="maxMarks" class="form-control" min="1" required>
-          </div>
-          <div class="col">
-            <label class="form-label">Minimum Pass Marks:</label>
-            <input type="number" name="minPassMark" class="form-control" min="0" required>
-          </div>
-        </div>
+      <div class="row" id="studentsContainer">
+        <% students.forEach(student => { %>
+          <div class="col-md-6 mb-3 student-field">
+            <label class="form-label fw-semibold"><%= student.hallticket %></label>
 
-        <h4 class="text-secondary">Marks for Students</h4>
-        <div class="row" id="studentsContainer">
-          <% students.forEach(student => { %>
-            <div class="col-md-6 mb-2 student-field">
-              <label class="form-label"><%= student.hallticket %>:</label>
-              <!-- Allow decimal marks -->
-              <input 
-                type="number" 
-                class="form-control student-input" 
-                name="marks_<%= student.hallticket %>" 
-                min="0" 
-                step="0.01"   
-                placeholder="Enter marks (e.g.,45 or 45.5)"
+            <div class="d-flex gap-2 align-items-center">
+              <!-- Marks input -->
+              <input
+                type="number"
+                class="form-control student-input"
+                name="marks_<%= student.hallticket %>"
+                min="0"
+                step="0.01"
+                placeholder="Marks"
               >
+
+              <!-- Absent checkbox -->
+              <div class="form-check">
+                <input
+                  class="form-check-input absent-checkbox"
+                  type="checkbox"
+                  name="absent_<%= student.hallticket %>"
+                  onchange="toggleAbsent(this, '<%= student.hallticket %>')"
+                >
+                <label class="form-check-label">Absent</label>
+              </div>
             </div>
-          <% }) %>
-        </div>
-        
+          </div>
+        <% }) %>
+      </div>
 
-        <div class="text-center mt-4">
-          <button id="submitBtn" type="submit" class="btn btn-success btn-lg">Submit</button>
-        </div>
-      </form>
-    </div>
+      <div class="text-center mt-4">
+        <button id="submitBtn" type="submit" class="btn btn-success btn-lg">
+          Submit
+        </button>
+      </div>
+    </form>
   </div>
-  
+</div>
 
-  <script>
-    function toggleFields(subject) {
-      const maxField = document.querySelector('[name="maxMarks"]');
-      const minField = document.querySelector('[name="minPassMark"]');
-      const studentFields = document.querySelectorAll('.student-field');
-  
-      if (subject === "Drawing" | subject === "Supw") {
-        // disable max/min marks
-        maxField.disabled = true;
-        minField.disabled = true;
-        maxField.value = "";
-        minField.value = "";
-        
-        // switch student inputs to grade
-        studentFields.forEach(div => {
-          const label = div.querySelector("label").textContent;
-          const hallticket = label.replace(":","").trim();
-          div.innerHTML = `
-            <label class="form-label">${hallticket}:</label>
-            <select class="form-select student-input" name="grade_${hallticket}">
-              <option value="">--Select Grade--</option>
-              <option>A+</option>
-              <option>A</option>
-              <option>B+</option>
-              <option>B</option>
-              <option>C</option>
-              <option>D</option>
-              <option>E</option>
-            </select>
-          `;
-        });
-  
-      } else {
-        // enable max/min marks
-        maxField.disabled = false;
-        minField.disabled = false;
-  
-        // switch back to marks input
-        studentFields.forEach(div => {
-          const hallticket = div.querySelector("label")?.textContent.replace(":","").trim() || div.getAttribute("data-hallticket");
-          div.innerHTML = `
-            <label class="form-label">${hallticket}:</label>
-            <input type="number" class="form-control student-input" name="marks_${hallticket}" min="0" step="0.01" placeholder="Enter marks (e.g.,45 or 45.5)">
-          `;
-        });
-      }
+<script>
+  function toggleAbsent(cb, hallticket) {
+    const input = document.querySelector(
+      `[name="marks_${hallticket}"], [name="grade_${hallticket}"]`
+    );
+    if (!input) return;
+
+    if (cb.checked) {
+      input.value = "";
+      input.disabled = true;
+    } else {
+      input.disabled = false;
     }
-  
-    function validateForm() {
-      const subject = document.querySelector('[name="subjectName"]').value;
-  
-      if (subject !== "Drawing" | subject !== "Supw") {
-        // Ensure all marks entered are within max mark limit
-        const maxMarks = parseFloat(document.querySelector('[name="maxMarks"]').value || "0");
-        const inputs = document.querySelectorAll('input[name^="marks_"]');
-        for (let input of inputs) {
-          if (input.value && parseFloat(input.value) > maxMarks) {
-            alert("Entered marks cannot exceed maximum marks!");
-            return false;
-          }
-        }
-      }
-  
-      // 🔹 Disable empty fields before submit
-      const allFields = document.querySelectorAll('.student-input');
-      allFields.forEach(field => {
-        if (!field.value || field.value.trim() === "") {
-          field.disabled = true;
-        }
+  }
+
+  function toggleFields(subject) {
+    const maxField = document.querySelector('[name="maxMarks"]');
+    const minField = document.querySelector('[name="minPassMark"]');
+    const studentFields = document.querySelectorAll('.student-field');
+
+    if (subject === "Drawing" || subject === "Supw") {
+      maxField.disabled = true;
+      minField.disabled = true;
+      maxField.value = "";
+      minField.value = "";
+
+      studentFields.forEach(div => {
+        const hallticket = div.querySelector("label").textContent.trim();
+        div.querySelector(".student-input").outerHTML = `
+          <select class="form-select student-input" name="grade_${hallticket}">
+            <option value="">--Select Grade--</option>
+            <option>A+</option>
+            <option>A</option>
+            <option>B+</option>
+            <option>B</option>
+            <option>C</option>
+            <option>D</option>
+            <option>E</option>
+          </select>
+        `;
       });
-  
-      return true;
+    } else {
+      maxField.disabled = false;
+      minField.disabled = false;
+
+      studentFields.forEach(div => {
+        const hallticket = div.querySelector("label").textContent.trim();
+        div.querySelector(".student-input").outerHTML = `
+          <input type="number" class="form-control student-input"
+            name="marks_${hallticket}" min="0" step="0.01" placeholder="Marks">
+        `;
+      });
     }
+  }
 
-    function disableSubmitButton() {
-  const btn = document.getElementById("submitBtn");
-  btn.disabled = true;
-  btn.innerText = "Submitting… Please wait";
-  btn.style.opacity = "0.6";
-}
-    
+  function validateForm() {
+    const subject = document.querySelector('[name="subjectName"]').value;
+    if (subject !== "Drawing" && subject !== "Supw") {
+      const maxMarks = parseFloat(document.querySelector('[name="maxMarks"]').value || "0");
+      const inputs = document.querySelectorAll('input[name^="marks_"]');
+      for (let input of inputs) {
+        if (input.value && parseFloat(input.value) > maxMarks) {
+          alert("Entered marks cannot exceed maximum marks!");
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 
-  </script>
+  function disableSubmitButton() {
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.innerText = "Submitting… Please wait";
+    btn.style.opacity = "0.6";
+  }
+</script>
 </body>
 </html>
