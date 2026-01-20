@@ -49,60 +49,81 @@ app.post("/submit", async (req, res) => {
 
   const timestamp = new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
 
-  // ✅ Build records for either Marks (default) or Grades (Drawing)
   let records = classStudents.map((student) => {
     const markValue = req.body[`marks_${student.hallticket}`];
     const gradeValue = req.body[`grade_${student.hallticket}`];
+    const isAbsent  = req.body[`absent_${student.hallticket}`];
 
-    if (subjectName === "Drawing" | subjectName ===  "Supw") {
-      if (!gradeValue) return null; // skip empty
+    // 🟡 ABSENT HANDLING (highest priority)
+    if (isAbsent) {
       return [
         teacherName || "",
         className || "",
         student.division || "",
         subjectName || "",
         examType || "",
-        "", // Min Pass not applicable
-        "", // Max Marks not applicable
+        subjectName === "Drawing" || subjectName === "Supw" ? "" : minPassMark || "",
+        subjectName === "Drawing" || subjectName === "Supw" ? "" : maxMarks || "",
         student.hallticket,
         student.name,
-        gradeValue,   // store grade instead of marks
-        "Grade",      // explicitly show it's a grade
-        timestamp
-      ];
-    } else {
-      if (!markValue) return null; // skip empty
-      const result = (parseFloat(markValue) >= parseFloat(minPassMark)) ? "Pass" : "Fail";
-      return [
-        teacherName || "",
-        className || "",
-        student.division || "",
-        subjectName || "",
-        examType || "",
-        minPassMark || "",
-        maxMarks || "",
-        student.hallticket,
-        student.name,
-        markValue,
-        result,
+        "ABSENT",
+        "Absent",
         timestamp
       ];
     }
+
+    // 🎨 DRAWING / SUPW → Grades
+    if (subjectName === "Drawing" || subjectName === "Supw") {
+      if (!gradeValue) return null;
+      return [
+        teacherName || "",
+        className || "",
+        student.division || "",
+        subjectName || "",
+        examType || "",
+        "",
+        "",
+        student.hallticket,
+        student.name,
+        gradeValue,
+        "Grade",
+        timestamp
+      ];
+    }
+
+    // 🧮 MARKS SUBJECTS
+    if (!markValue) return null;
+
+    const result = (parseFloat(markValue) >= parseFloat(minPassMark))
+      ? "Pass"
+      : "Fail";
+
+    return [
+      teacherName || "",
+      className || "",
+      student.division || "",
+      subjectName || "",
+      examType || "",
+      minPassMark || "",
+      maxMarks || "",
+      student.hallticket,
+      student.name,
+      markValue,
+      result,
+      timestamp
+    ];
   }).filter(Boolean);
 
-  // ✅ Ensure at least one record exists
   if (records.length === 0) {
-    return res.send("No marks/grades entered!");
+    return res.send("No marks / grades / absentees entered!");
   }
 
-  // ✅ Sheet name = className-subjectName
   const sheetName = `${className}-${subjectName}`;
 
   try {
     const client = await auth.getClient();
     const sheets = google.sheets({ version: "v4", auth: client });
 
-    // Check if worksheet exists
     const sheetMeta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
     const existingSheets = sheetMeta.data.sheets.map(s => s.properties.title);
 
@@ -114,7 +135,6 @@ app.post("/submit", async (req, res) => {
         }
       });
 
-      // ✅ Add headers
       await sheets.spreadsheets.values.update({
         spreadsheetId: SHEET_ID,
         range: `${sheetName}!A1:L1`,
@@ -133,67 +153,66 @@ app.post("/submit", async (req, res) => {
             "Marks/Grade",
             "Result",
             "Timestamp"
-          ]],
-        },
+          ]]
+        }
       });
     }
 
-    // ✅ Append data
     await sheets.spreadsheets.values.append({
       spreadsheetId: SHEET_ID,
       range: `${sheetName}!A:L`,
       valueInputOption: "USER_ENTERED",
-      requestBody: { values: records },
+      requestBody: { values: records }
     });
 
-    // ✅ Color "Fail" rows only when it's not Drawing
-    // ✅ Color the whole "Result" column (J) each time
-if (subjectName !== "Drawing" && subjectName !== "Supw") {
-  const freshMeta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
-  const targetSheet = freshMeta.data.sheets.find(s => s.properties.title === sheetName);
-  const sheetId = targetSheet.properties.sheetId;
+    // 🔴 Coloring FAIL only (skip Drawing & SUPW)
+    if (subjectName !== "Drawing" && subjectName !== "Supw") {
+      const freshMeta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
+      const targetSheet = freshMeta.data.sheets.find(s => s.properties.title === sheetName);
+      const sheetId = targetSheet.properties.sheetId;
 
-  // 1️⃣ Get all values in column J (Result column)
-  const resultData = await sheets.spreadsheets.values.get({
-    spreadsheetId: SHEET_ID,
-    range: `${sheetName}!K2:K`, // skip header row
-  });
+      const resultData = await sheets.spreadsheets.values.get({
+        spreadsheetId: SHEET_ID,
+        range: `${sheetName}!K2:K`
+      });
 
-  const results = resultData.data.values || [];
+      const results = resultData.data.values || [];
 
-  // 2️⃣ Build coloring requests for each row
-  const requests = results.map((row, i) => {
-    const value = row[0] ? row[0].toString().trim() : "";
-    let color = { red: 1, green: 1, blue: 1 }; // default = white
+      const requests = results.map((row, i) => {
+        const value = (row[0] || "").toString().toLowerCase();
+        let color = { red: 1, green: 1, blue: 1 };
 
-    if (value.toLowerCase() === "fail") {
-      color = { red: 1, green: 0.8, blue: 0.8 }; // light red
-    }
+        if (value === "fail") {
+          color = { red: 1, green: 0.8, blue: 0.8 };
+        }
 
-    return {
-      repeatCell: {
-        range: {
-          sheetId,
-          startRowIndex: i + 1,  // +1 to skip header
-          endRowIndex: i + 2,
-          startColumnIndex: 10,   // Column K index = 10
-          endColumnIndex: 11
-        },
-        cell: { userEnteredFormat: { backgroundColor: color } },
-        fields: "userEnteredFormat.backgroundColor"
+        else if (value === "absent") {
+         // 🟡 Absent → light yellow
+        color = { red: 1, green: 1, blue: 0.6 };
+        }
+
+        return {
+          repeatCell: {
+            range: {
+              sheetId,
+              startRowIndex: i + 1,
+              endRowIndex: i + 2,
+              startColumnIndex: 10,
+              endColumnIndex: 11
+            },
+            cell: { userEnteredFormat: { backgroundColor: color } },
+            fields: "userEnteredFormat.backgroundColor"
+          }
+        };
+      });
+
+      if (requests.length > 0) {
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId: SHEET_ID,
+          requestBody: { requests }
+        });
       }
-    };
-  });
-
-  // 3️⃣ Send batchUpdate to Google Sheets
-  if (requests.length > 0) {
-    await sheets.spreadsheets.batchUpdate({
-      spreadsheetId: SHEET_ID,
-      requestBody: { requests }
-    });
-  }
-}
-
+    }
 
     res.render("success", { message: `Data for ${sheetName} submitted successfully!` });
 
@@ -202,6 +221,7 @@ if (subjectName !== "Drawing" && subjectName !== "Supw") {
     res.send("Error saving data to Google Sheets");
   }
 });
+
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
