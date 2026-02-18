@@ -167,53 +167,59 @@ app.post("/submit", async (req, res) => {
 
     // 🔴 Coloring FAIL only (skip Drawing & SUPW)
     if (subjectName !== "Drawing" && subjectName !== "Supw") {
-      const freshMeta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
-      const targetSheet = freshMeta.data.sheets.find(s => s.properties.title === sheetName);
-      const sheetId = targetSheet.properties.sheetId;
+  const freshMeta = await sheets.spreadsheets.get({ spreadsheetId: SHEET_ID });
+  const targetSheet = freshMeta.data.sheets.find(
+    s => s.properties.title === sheetName
+  );
+  const sheetId = targetSheet.properties.sheetId;
 
-      const resultData = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
-        range: `${sheetName}!K2:K`
-      });
+  // Get entire Result column (K)
+  const resultData = await sheets.spreadsheets.values.get({
+    spreadsheetId: SHEET_ID,
+    range: `${sheetName}!K2:K`,
+  });
 
-      const results = resultData.data.values || [];
+  const results = resultData.data.values || [];
 
-      const requests = results.map((row, i) => {
-        const value = (row[0] || "").toString().toLowerCase();
-        let color = { red: 1, green: 1, blue: 1 };
+  const requests = results.map((row, i) => {
+    const value = row[0] ? row[0].toString().trim().toLowerCase() : "";
 
-        if (value === "fail") {
-          color = { red: 1, green: 0.8, blue: 0.8 };
-        }
+    let color = { red: 1, green: 1, blue: 1 }; // default white
 
-        else if (value === "absent") {
-         // 🟡 Absent → light yellow
-        color = { red: 1, green: 1, blue: 0.6 };
-        }
-
-        return {
-          repeatCell: {
-            range: {
-              sheetId,
-              startRowIndex: i + 1,
-              endRowIndex: i + 2,
-              startColumnIndex: 10,
-              endColumnIndex: 11
-            },
-            cell: { userEnteredFormat: { backgroundColor: color } },
-            fields: "userEnteredFormat.backgroundColor"
-          }
-        };
-      });
-
-      if (requests.length > 0) {
-        await sheets.spreadsheets.batchUpdate({
-          spreadsheetId: SHEET_ID,
-          requestBody: { requests }
-        });
-      }
+    if (value === "fail") {
+      // 🔴 Light red
+      color = { red: 1, green: 0.8, blue: 0.8 };
+    } else if (value === "absent") {
+      // 🟡 Light yellow
+      color = { red: 1, green: 1, blue: 0.6 };
     }
 
+    return {
+      repeatCell: {
+        range: {
+          sheetId,
+          startRowIndex: i + 1,   // Skip header
+          endRowIndex: i + 2,
+          startColumnIndex: 0,    // Start from column A
+          endColumnIndex: 12      // Until column L
+        },
+        cell: {
+          userEnteredFormat: {
+            backgroundColor: color
+          }
+        },
+        fields: "userEnteredFormat.backgroundColor"
+      }
+    };
+  });
+
+  if (requests.length > 0) {
+    await sheets.spreadsheets.batchUpdate({
+      spreadsheetId: SHEET_ID,
+      requestBody: { requests }
+    });
+  }
+}
     res.render("success", { message: `Data for ${sheetName} submitted successfully!` });
 
   } catch (err) {
