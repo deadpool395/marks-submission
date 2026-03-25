@@ -192,11 +192,26 @@
   }
 
   function disableSubmitButton() {
-    const btn = document.getElementById("submitBtn");
-    btn.disabled = true;
-    btn.innerText = "Submitting… Please wait";
-    btn.style.opacity = "0.6";
-  }
+  const btn = document.getElementById("submitBtn");
+
+  btn.disabled = true;
+  btn.style.opacity = "0.6";
+
+  let seconds = 12;
+  btn.innerText = `Submitting... (${seconds}s)`;
+
+  const interval = setInterval(() => {
+    seconds--;
+    btn.innerText = `Please wait... (${seconds}s)`;
+
+    if (seconds <= 0) {
+      clearInterval(interval);
+      btn.disabled = false;
+      btn.innerText = "Submit";
+      btn.style.opacity = "1";
+    }
+  }, 1000);
+}
 </script>
 </body>
 </html>
